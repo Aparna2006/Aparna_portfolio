@@ -53,6 +53,16 @@ copy .env.example .env
 
 3. Configure `.env` for Atlas + Gmail SMTP:
 
+```env
+MONGODB_URI=your_atlas_uri
+CONTACT_RECEIVER=aparnakl2006@gmail.com
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-smtp-account@gmail.com
+SMTP_PASS=your_16_char_gmail_app_password
+SMTP_FROM_NAME=Portfolio Contact
+```
+
 
 4. For Gmail, enable 2-Step Verification and create an App Password.
 
@@ -71,12 +81,14 @@ npm run dev
    - `MONGODB_URI` = your MongoDB Atlas URI
    - `SMTP_USER` = your Gmail address used for SMTP
    - `SMTP_PASS` = your Gmail 16-character App Password
+   - `SMTP_FROM_NAME` = `Portfolio Contact`
 5. Deploy and wait for build to finish.
 6. Verify:
    - `https://<your-render-url>/api/health`
    - Submit the contact form from your deployed site and confirm:
      - receiver mail gets message
      - sender gets auto-reply
+   - if mail does not arrive, check Render logs using the returned `requestId`
     
 ---
 

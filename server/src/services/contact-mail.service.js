@@ -12,9 +12,14 @@ function escapeHtml(value) {
 async function sendContactMail(payload) {
   const { transporter, error } = getTransporter();
   const to = process.env.CONTACT_RECEIVER || "aparnakl2006@gmail.com";
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const smtpUser = (process.env.SMTP_USER || "").trim();
+  const fromName = (process.env.SMTP_FROM_NAME || "Portfolio Contact").trim();
+  const from = {
+    name: fromName,
+    address: smtpUser,
+  };
 
-  if (!transporter || !from) {
+  if (!transporter || !smtpUser) {
     return {
       ok: false,
       reason: error || "SMTP not configured",

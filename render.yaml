@@ -25,5 +25,5 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
-      - key: SMTP_FROM
-        value: Portfolio Contact <aparnakl2006@gmail.com>
+      - key: SMTP_FROM_NAME
+        value: Portfolio Contact
