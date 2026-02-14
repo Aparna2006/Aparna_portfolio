@@ -57,7 +57,7 @@ copy .env.example .env
 MONGODB_URI=your_atlas_uri
 CONTACT_RECEIVER=aparnakl2006@gmail.com
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+SMTP_PORT=465
 SMTP_USER=your-smtp-account@gmail.com
 SMTP_PASS=your_16_char_gmail_app_password
 SMTP_FROM_NAME=Portfolio Contact
