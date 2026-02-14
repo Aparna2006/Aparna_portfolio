@@ -1,5 +1,19 @@
 'use strict';
 
+const RENDER_API_BASE = "https://aparna-portfolio-abha.onrender.com";
+
+function getApiBaseUrl() {
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".onrender.com")) {
+    return "";
+  }
+  return RENDER_API_BASE;
+}
+
+function apiUrl(path) {
+  return `${getApiBaseUrl()}${path}`;
+}
+
 
 
 // element toggle function
@@ -177,7 +191,7 @@ if (form) {
         controller.abort();
       }, 15000);
 
-      const response = await fetch("/api/contact", {
+      const response = await fetch(apiUrl("/api/contact"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -199,7 +213,10 @@ if (form) {
           throw new Error("Invalid API response format.");
         }
       } else {
-        throw new Error("Server returned non-JSON response. Please refresh and try again.");
+        if (response.status >= 500) {
+          throw new Error("Server is temporarily unavailable. Please wait 20-30 seconds and try again.");
+        }
+        throw new Error("Unable to process request from this host. Open the Render live link and try again.");
       }
 
       if (!response.ok || !result.success) {
@@ -241,7 +258,7 @@ for (let i = 0; i < trackableDownloads.length; i++) {
       section: link.dataset.downloadSection || "general",
     };
 
-    fetch("/api/downloads", {
+    fetch(apiUrl("/api/downloads"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
