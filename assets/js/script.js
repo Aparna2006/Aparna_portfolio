@@ -225,7 +225,7 @@ if (form) {
       }
 
       form.reset();
-      updateFormStatus("Message received successfully. Email delivery is in progress.", "success");
+      updateFormStatus("Message sent successfully. Thanks for reaching out.", "success");
     } catch (error) {
       if (error.name === "AbortError") {
         updateFormStatus("Request timed out. Please try again.", "error");

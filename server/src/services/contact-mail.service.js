@@ -9,7 +9,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-async function sendContactMail(payload) {
+function getMailContext() {
   const { transporter, error } = getTransporter();
   const to = process.env.CONTACT_RECEIVER || "aparnakl2006@gmail.com";
   const smtpUser = (process.env.SMTP_USER || "").trim();
@@ -24,6 +24,20 @@ async function sendContactMail(payload) {
       ok: false,
       reason: error || "SMTP not configured",
     };
+  }
+
+  return {
+    ok: true,
+    transporter,
+    to,
+    from,
+  };
+}
+
+async function sendPrimaryContactMail(payload) {
+  const context = getMailContext();
+  if (!context.ok) {
+    return context;
   }
 
   const subject = `New Portfolio Contact: ${payload.fullName}`;
@@ -48,50 +62,16 @@ async function sendContactMail(payload) {
   `;
 
   try {
-    await transporter.sendMail({
-      from,
-      to,
+    await context.transporter.sendMail({
+      from: context.from,
+      to: context.to,
       replyTo: payload.email,
       subject,
       text,
       html,
     });
 
-    const autoReplySubject = "Thanks for contacting Aparna";
-    const autoReplyText = [
-      `Hi ${payload.fullName},`,
-      "",
-      "Thanks for reaching out through my portfolio.",
-      "I received your message and will get back to you shortly.",
-      "",
-      "Regards,",
-      "Aparna Kondiparthy",
-    ].join("\n");
-
-    const autoReplyHtml = `
-      <p>Hi ${escapeHtml(payload.fullName)},</p>
-      <p>Thanks for reaching out through my portfolio.</p>
-      <p>I received your message and will get back to you shortly.</p>
-      <p>Regards,<br>Aparna Kondiparthy</p>
-    `;
-
-    let autoReplySent = true;
-    let autoReplyError = null;
-
-    try {
-      await transporter.sendMail({
-        from,
-        to: payload.email,
-        subject: autoReplySubject,
-        text: autoReplyText,
-        html: autoReplyHtml,
-      });
-    } catch (error) {
-      autoReplySent = false;
-      autoReplyError = error.message;
-    }
-
-    return { ok: true, autoReplySent, autoReplyError };
+    return { ok: true };
   } catch (error) {
     return {
       ok: false,
@@ -100,6 +80,45 @@ async function sendContactMail(payload) {
   }
 }
 
+async function sendAutoReplyMail(payload) {
+  const context = getMailContext();
+  if (!context.ok) {
+    return context;
+  }
+
+  const autoReplySubject = "Thanks for contacting Aparna";
+  const autoReplyText = [
+    `Hi ${payload.fullName},`,
+    "",
+    "Thanks for reaching out through my portfolio.",
+    "I received your message and will get back to you shortly.",
+    "",
+    "Regards,",
+    "Aparna Kondiparthy",
+  ].join("\n");
+
+  const autoReplyHtml = `
+    <p>Hi ${escapeHtml(payload.fullName)},</p>
+    <p>Thanks for reaching out through my portfolio.</p>
+    <p>I received your message and will get back to you shortly.</p>
+    <p>Regards,<br>Aparna Kondiparthy</p>
+  `;
+
+  try {
+    await context.transporter.sendMail({
+      from: context.from,
+      to: payload.email,
+      subject: autoReplySubject,
+      text: autoReplyText,
+      html: autoReplyHtml,
+    });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: error.message };
+  }
+}
+
 module.exports = {
-  sendContactMail,
+  sendPrimaryContactMail,
+  sendAutoReplyMail,
 };

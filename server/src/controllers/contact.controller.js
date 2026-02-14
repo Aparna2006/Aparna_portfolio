@@ -1,7 +1,10 @@
 const Contact = require("../models/contact.model");
 const mongoose = require("mongoose");
 const { validateContactPayload } = require("../utils/validators");
-const { sendContactMail } = require("../services/contact-mail.service");
+const {
+  sendPrimaryContactMail,
+  sendAutoReplyMail,
+} = require("../services/contact-mail.service");
 
 async function createContact(req, res, next) {
   try {
@@ -35,25 +38,37 @@ async function createContact(req, res, next) {
     const created = await Contact.create(payload);
     console.info(`[contact:${requestId}] Message saved for ${payload.email}`);
 
+    const primaryMailStatus = await sendPrimaryContactMail(payload);
+    if (!primaryMailStatus.ok) {
+      console.error(`[contact:${requestId}] Primary email failed: ${primaryMailStatus.reason}`);
+      return res.status(502).json({
+        success: false,
+        message: "Message was saved, but email delivery failed. Please try again.",
+        errors: [primaryMailStatus.reason],
+        requestId,
+        data: {
+          id: created._id,
+          createdAt: created.createdAt,
+          saved: true,
+        },
+      });
+    }
+
     setImmediate(async () => {
-      const mailStatus = await sendContactMail(payload);
-      if (!mailStatus.ok) {
-        console.error(`[contact:${requestId}] Email delivery failed: ${mailStatus.reason}`);
-        return;
-      }
-      if (!mailStatus.autoReplySent && mailStatus.autoReplyError) {
-        console.warn(`[contact:${requestId}] Auto-reply failed: ${mailStatus.autoReplyError}`);
+      const autoReplyStatus = await sendAutoReplyMail(payload);
+      if (!autoReplyStatus.ok) {
+        console.warn(`[contact:${requestId}] Auto-reply failed: ${autoReplyStatus.reason}`);
       }
     });
 
     return res.status(201).json({
       success: true,
-      message: "Message received successfully.",
+      message: "Message sent successfully.",
       requestId,
       data: {
         id: created._id,
         createdAt: created.createdAt,
-        queuedForEmail: true,
+        emailDelivered: true,
       },
     });
   } catch (error) {
