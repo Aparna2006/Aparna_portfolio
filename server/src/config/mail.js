@@ -1,4 +1,6 @@
 const nodemailer = require("nodemailer");
+let cachedTransporter = null;
+let cachedKey = null;
 
 function getTransporter() {
   const host = (process.env.SMTP_HOST || "").trim();
@@ -20,18 +22,29 @@ function getTransporter() {
     };
   }
 
-  return {
-    transporter: nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass,
-      },
-    }),
-    error: null,
-  };
+  const cacheKey = `${host}|${port}|${user}|${pass}`;
+  if (cachedTransporter && cachedKey === cacheKey) {
+    return { transporter: cachedTransporter, error: null };
+  }
+
+  cachedTransporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 100,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    auth: {
+      user,
+      pass,
+    },
+  });
+  cachedKey = cacheKey;
+
+  return { transporter: cachedTransporter, error: null };
 }
 
 module.exports = {

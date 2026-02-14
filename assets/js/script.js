@@ -172,13 +172,21 @@ if (form) {
       formBtn.setAttribute("disabled", "");
       updateFormStatus("Sending message...", "");
 
+      const controller = new AbortController();
+      let timeoutId = setTimeout(function () {
+        controller.abort();
+      }, 15000);
+
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        signal: controller.signal,
         body: JSON.stringify(payload),
       });
+      clearTimeout(timeoutId);
+      timeoutId = null;
 
       const result = await response.json();
 
@@ -190,7 +198,11 @@ if (form) {
       form.reset();
       updateFormStatus("Message sent successfully. Thanks for reaching out.", "success");
     } catch (error) {
-      updateFormStatus(error.message || "Failed to send message. Please try again.", "error");
+      if (error.name === "AbortError") {
+        updateFormStatus("Request timed out. Please try again.", "error");
+      } else {
+        updateFormStatus(error.message || "Failed to send message. Please try again.", "error");
+      }
     } finally {
       formBtn.classList.remove("is-loading");
       if (!form.checkValidity()) {

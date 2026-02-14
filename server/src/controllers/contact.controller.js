@@ -32,31 +32,28 @@ async function createContact(req, res, next) {
       });
     }
 
-    const mailStatus = await sendContactMail(payload);
-    if (!mailStatus.ok) {
-      return res.status(503).json({
-        success: false,
-        message:
-          "Email delivery is not configured or failed. Please contact later.",
-        errors: [mailStatus.reason],
-        requestId,
-      });
-    }
-    if (!mailStatus.autoReplySent && mailStatus.autoReplyError) {
-      console.warn(`Auto-reply failed: ${mailStatus.autoReplyError}`);
-    }
-
     const created = await Contact.create(payload);
     console.info(`[contact:${requestId}] Message saved for ${payload.email}`);
 
+    setImmediate(async () => {
+      const mailStatus = await sendContactMail(payload);
+      if (!mailStatus.ok) {
+        console.error(`[contact:${requestId}] Email delivery failed: ${mailStatus.reason}`);
+        return;
+      }
+      if (!mailStatus.autoReplySent && mailStatus.autoReplyError) {
+        console.warn(`[contact:${requestId}] Auto-reply failed: ${mailStatus.autoReplyError}`);
+      }
+    });
+
     return res.status(201).json({
       success: true,
-      message: "Message sent successfully.",
+      message: "Message received successfully.",
       requestId,
       data: {
         id: created._id,
         createdAt: created.createdAt,
-        autoReplySent: mailStatus.autoReplySent,
+        queuedForEmail: true,
       },
     });
   } catch (error) {
