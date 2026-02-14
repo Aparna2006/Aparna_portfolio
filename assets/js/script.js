@@ -212,6 +212,8 @@ if (form) {
     } catch (error) {
       if (error.name === "AbortError") {
         updateFormStatus("Request timed out. Please try again.", "error");
+      } else if (typeof error.message === "string" && error.message.includes("Unexpected token")) {
+        updateFormStatus("Server returned an invalid response. Please refresh and try again.", "error");
       } else {
         updateFormStatus(error.message || "Failed to send message. Please try again.", "error");
       }
