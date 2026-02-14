@@ -49,15 +49,6 @@ copy .env.example .env
 
 3. Configure `.env` for Atlas + Gmail SMTP:
 
-```env
-MONGODB_URI=your_atlas_uri
-CONTACT_RECEIVER=aparnakl2006@gmail.com
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=aparnakl2006@gmail.com
-SMTP_PASS=your_16_char_gmail_app_password
-SMTP_FROM="Portfolio Contact <aparnakl2006@gmail.com>"
-```
 
 4. For Gmail, enable 2-Step Verification and create an App Password.
 
@@ -66,20 +57,6 @@ SMTP_FROM="Portfolio Contact <aparnakl2006@gmail.com>"
 ```bash
 npm run dev
 ```
-
-6. Open:
-
-```text
-http://localhost:5000
-```
-
-## API Endpoints
-
-- `GET /api/health` - health check
-- `GET /api/contact?limit=20` - list contact requests
-- `POST /api/contact` - sends email and saves contact form request
-- `GET /api/downloads?limit=20` - list tracked downloads
-- `POST /api/downloads` - track resume/certificate downloads
 
 ## Deploy on Render
 
@@ -96,14 +73,14 @@ http://localhost:5000
    - Submit the contact form from your deployed site and confirm:
      - receiver mail gets message
      - sender gets auto-reply
+    
+---
 
-## Optional: Vercel + Render Split
+## 🤝 Connect With Me
 
-- Frontend on Vercel, backend on Render.
-- If you do this split, frontend fetch URLs must point to your Render API base URL.
+If you found this project helpful or inspiring, feel free to connect with me and collaborate.
 
-## Notes
+If you like this project, please consider giving it a ⭐ on GitHub — it really supports my work!
 
-- The UI design and section layout were intentionally preserved.
-- Form and tracking requests are wired in `assets/js/script.js`.
-- Static assets are served from `assets/` via Express.
+**Author:** Aparna Kondiparthy ❤️
+
