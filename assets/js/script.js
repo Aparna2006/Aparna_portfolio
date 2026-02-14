@@ -188,7 +188,19 @@ if (form) {
       clearTimeout(timeoutId);
       timeoutId = null;
 
-      const result = await response.json();
+      const raw = await response.text();
+      const contentType = response.headers.get("content-type") || "";
+      let result = null;
+
+      if (contentType.includes("application/json")) {
+        try {
+          result = JSON.parse(raw);
+        } catch (parseError) {
+          throw new Error("Invalid API response format.");
+        }
+      } else {
+        throw new Error("Server returned non-JSON response. Please refresh and try again.");
+      }
 
       if (!response.ok || !result.success) {
         const details = Array.isArray(result.errors) ? result.errors.join(" ") : "";
