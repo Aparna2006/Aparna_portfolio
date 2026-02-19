@@ -13,10 +13,32 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const ROOT_DIR = path.resolve(__dirname, "..");
 
+const normalizeOrigin = (value) => (value || "").trim().replace(/\/$/, "").toLowerCase();
+
 const allowedOrigins = (process.env.FRONTEND_ORIGINS || "")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    const isConfigured = allowedOrigins.includes(normalizedOrigin);
+    const isVercelPreview = normalizedOrigin.endsWith(".vercel.app");
+
+    if (isConfigured || isVercelPreview) {
+      return callback(null, true);
+    }
+
+    return callback(null, false);
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+};
 
 connectDB();
 
@@ -24,18 +46,7 @@ app.use(morgan("dev"));
 app.use(requestIdMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("CORS origin not allowed"));
-    },
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
+app.use(cors(corsOptions));
 
 app.use("/api", apiRoutes);
 
