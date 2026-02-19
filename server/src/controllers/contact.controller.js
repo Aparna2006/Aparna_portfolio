@@ -38,24 +38,14 @@ async function createContact(req, res, next) {
     const created = await Contact.create(payload);
     console.info(`[contact:${requestId}] Message saved for ${payload.email}`);
 
-    const primaryMailStatus = await sendPrimaryContactMail(payload);
-    if (!primaryMailStatus.ok) {
-      console.warn(`[contact:${requestId}] Primary email failed: ${primaryMailStatus.reason}`);
-
-      return res.status(201).json({
-        success: true,
-        message: "Message received successfully. Email notification is temporarily unavailable.",
-        requestId,
-        data: {
-          id: created._id,
-          createdAt: created.createdAt,
-          emailDelivered: false,
-          saved: true,
-        },
-      });
-    }
-
+    // Do SMTP work asynchronously so request latency stays low on hosted environments.
     setImmediate(async () => {
+      const primaryMailStatus = await sendPrimaryContactMail(payload);
+      if (!primaryMailStatus.ok) {
+        console.warn(`[contact:${requestId}] Primary email failed: ${primaryMailStatus.reason}`);
+        return;
+      }
+
       const autoReplyStatus = await sendAutoReplyMail(payload);
       if (!autoReplyStatus.ok) {
         console.warn(`[contact:${requestId}] Auto-reply failed: ${autoReplyStatus.reason}`);
@@ -64,12 +54,13 @@ async function createContact(req, res, next) {
 
     return res.status(201).json({
       success: true,
-      message: "Message sent successfully.",
+      message: "Message received successfully.",
       requestId,
       data: {
         id: created._id,
         createdAt: created.createdAt,
-        emailDelivered: true,
+        saved: true,
+        emailQueued: true,
       },
     });
   } catch (error) {
