@@ -40,15 +40,16 @@ async function createContact(req, res, next) {
 
     const primaryMailStatus = await sendPrimaryContactMail(payload);
     if (!primaryMailStatus.ok) {
-      console.error(`[contact:${requestId}] Primary email failed: ${primaryMailStatus.reason}`);
-      return res.status(502).json({
-        success: false,
-        message: "Message was saved, but email delivery failed. Please try again.",
-        errors: [primaryMailStatus.reason],
+      console.warn(`[contact:${requestId}] Primary email failed: ${primaryMailStatus.reason}`);
+
+      return res.status(201).json({
+        success: true,
+        message: "Message received successfully. Email notification is temporarily unavailable.",
         requestId,
         data: {
           id: created._id,
           createdAt: created.createdAt,
+          emailDelivered: false,
           saved: true,
         },
       });
